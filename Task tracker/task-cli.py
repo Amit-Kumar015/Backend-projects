@@ -53,6 +53,22 @@ def update(id, updated_task):
     else:
         print(f"No task found with id: {id}")
     
+# delete
+def delete(id):
+    tasks = load_tasks()
+    is_deleted = False
+
+    for i, task in enumerate(tasks):
+        if task["id"] == id:
+            tasks.pop(i)
+            is_deleted = True
+            break
+    
+    if is_deleted:
+        with open("task.json", "w") as f:
+            json.dump(tasks, f, indent=2)
+    else:
+        print(f"No task found with id: {id}")
     
     
 
@@ -80,6 +96,13 @@ else:
             sys.exit()
         
         update(id, updated_task)
+    elif command == "delete":
+        id = int(sys.argv[2])
+        if id < 0:
+            print("provide valid id")
+            sys.exit()
+
+        delete(id)
         
 
 
