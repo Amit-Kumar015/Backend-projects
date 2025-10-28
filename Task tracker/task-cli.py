@@ -69,7 +69,41 @@ def delete(id):
             json.dump(tasks, f, indent=2)
     else:
         print(f"No task found with id: {id}")
+
+# mark-in-progress
+def mark_in_progress(id):
+    tasks = load_tasks()
+    found = False
+
+    for task in tasks:
+        if task["id"] == id:
+            task["status"] = "in-progress"
+            found = True
+            break
     
+    if found:
+        with open("task.json", "w") as f:
+            json.dump(tasks, f, indent=2)
+    else:
+        print(f"No task found with id: {id}")
+        
+    
+# mark-done
+def mark_done(id):
+    tasks = load_tasks()
+    found = False
+
+    for task in tasks:
+        if task["id"] == id:
+            task["status"] = "done"
+            found = True
+            break
+    
+    if found:
+        with open("task.json", "w") as f:
+            json.dump(tasks, f, indent=2)
+    else:
+        print(f"No task found with id: {id}")
     
 
 if len(sys.argv) < 2:
@@ -103,6 +137,19 @@ else:
             sys.exit()
 
         delete(id)
-        
+    elif command == "mark-in-progress":
+        id = int(sys.argv[2])
+        if id < 0:
+            print("provide valid id")
+            sys.exit()
+
+        mark_in_progress(id)
+    elif command == "mark-done":
+        id = int(sys.argv[2])
+        if id < 0:
+            print("provide valid id")
+            sys.exit()
+
+        mark_done(id)    
 
 
