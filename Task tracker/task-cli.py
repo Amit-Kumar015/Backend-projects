@@ -1,6 +1,8 @@
 import sys
 import os
 import json
+import datetime
+
 
 def load_tasks():
     if not os.path.exists("task.json"):
@@ -12,6 +14,7 @@ def load_tasks():
         except json.JSONDecodeError:
             return []
 
+# add
 def add(t):
     tasks = load_tasks()
 
@@ -22,15 +25,36 @@ def add(t):
     
     task = {
         "id": next_id,
-        "task": t,
-        "done": "false"
+        "description": t,
+        "status": "false",
+        "createdAt": datetime.datetime.now().strftime("%c"),
+        "updatedAt": datetime.datetime.now().strftime("%c")
     }
 
     tasks.append(task)
     with open("task.json", "w") as f:
-        json.dump(tasks, f)
+        json.dump(tasks, f, indent=2)
 
+# update
+def update(id, updated_task):
+    tasks = load_tasks()
+    found = False
 
+    for task in tasks:
+        if task["id"] == id:
+            task["description"] = updated_task
+            task["updatedAt"] = datetime.datetime.now().strftime("%c")
+            found = True
+            break
+    
+    if found:
+        with open("task.json", "w") as f:
+            json.dump(tasks, f, indent=2)
+    else:
+        print(f"No task found with id: {id}")
+    
+    
+    
 
 if len(sys.argv) < 2:
     print("Please provide a command")
@@ -43,6 +67,19 @@ else:
             print("Please provide a task")
         else:
             add(task)
+    elif command == "update":
+        id = int(sys.argv[2])
+        updated_task = sys.argv[3]
 
+        if id < 0:
+            print("provide valid id")
+            sys.exit()
+
+        if len(updated_task) == 0:
+            print("provide updated task")
+            sys.exit()
+        
+        update(id, updated_task)
+        
 
 
