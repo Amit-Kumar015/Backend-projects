@@ -1,9 +1,9 @@
-import sys
 import os
 import json
 import datetime
+import shlex
 
-
+# get all tasks
 def load_tasks():
     if not os.path.exists("task.json"):
         return []
@@ -13,6 +13,17 @@ def load_tasks():
             return json.load(f)
         except json.JSONDecodeError:
             return []
+
+# show tasks
+def show_tasks():
+    tasks = load_tasks()
+
+    print(f"{'ID':<5} {'Description':<30} {'Status':<12}")
+    print("-" * 50)
+
+    for task in tasks:
+        print(f"{task['id']:<5} {task['description']:<30} {task['status']:<12}")
+
 
 # add
 def add(t):
@@ -34,6 +45,7 @@ def add(t):
     tasks.append(task)
     with open("task.json", "w") as f:
         json.dump(tasks, f, indent=2)
+    show_tasks()
 
 # update
 def update(id, updated_task):
@@ -50,6 +62,7 @@ def update(id, updated_task):
     if found:
         with open("task.json", "w") as f:
             json.dump(tasks, f, indent=2)
+        show_tasks()
     else:
         print(f"No task found with id: {id}")
     
@@ -67,6 +80,7 @@ def delete(id):
     if is_deleted:
         with open("task.json", "w") as f:
             json.dump(tasks, f, indent=2)
+        show_tasks()
     else:
         print(f"No task found with id: {id}")
 
@@ -78,12 +92,14 @@ def mark_in_progress(id):
     for task in tasks:
         if task["id"] == id:
             task["status"] = "in-progress"
+            task["updatedAt"] = datetime.datetime.now().strftime("%c")
             found = True
             break
     
     if found:
         with open("task.json", "w") as f:
             json.dump(tasks, f, indent=2)
+        show_tasks()
     else:
         print(f"No task found with id: {id}")
         
@@ -96,85 +112,125 @@ def mark_done(id):
     for task in tasks:
         if task["id"] == id:
             task["status"] = "done"
+            task["updatedAt"] = datetime.datetime.now().strftime("%c")
             found = True
             break
     
     if found:
         with open("task.json", "w") as f:
             json.dump(tasks, f, indent=2)
+        show_tasks()
     else:
         print(f"No task found with id: {id}")
 
-# Listing all tasks
-def list():
-    tasks = load_tasks()
-
-    for task in tasks:
-        print(f"task: {task['description']} | status: {task['status']}")
 
 # Listing tasks by status
 def list_status(status):
     tasks = load_tasks()
+    print(f"{'ID':<5} {'Description':<30} {'Status':<12}")
+    print("-" * 50)
 
     for task in tasks:
         if task["status"] == status:
-            print(f"task: {task['description']} | status: {task['status']}")
+            print(f"{task['id']:<5} {task['description']:<30} {task['status']:<12}")
     
 
-if len(sys.argv) < 2:
-    print("Please provide a command")
-else:
-    command = sys.argv[1]
 
-    if command == "add":
-        task = sys.argv[2]
-        if len(task) == 0:
-            print("Please provide a task")
+once = True
+while True:
+    tasks = load_tasks()
+
+    if once:
+        if len(tasks) == 0:
+            print("No task in DB, Create one!")
         else:
-            add(task)
-    elif command == "update":
-        id = int(sys.argv[2])
-        updated_task = sys.argv[3]
+            show_tasks()
+        once = False
 
+    command = input("Enter command: ")
+    parts = shlex.split(command)
+
+    cmd = parts[0]
+    argv = len(parts)
+
+    if cmd == "add":
+        if argv != 2:
+            print("Please provide correct command")
+            continue
+        
+        task = parts[1]
+        add(task)
+    elif cmd == "update":
+        if argv != 3:
+            print("Please provide correct command")
+            continue
+        
+        id = int(parts[1])
         if id < 0:
             print("provide valid id")
-            sys.exit()
+            continue
 
+        updated_task = parts[2]
         if len(updated_task) == 0:
             print("provide updated task")
-            sys.exit()
+            continue
         
         update(id, updated_task)
-    elif command == "delete":
-        id = int(sys.argv[2])
-        if id < 0:
-            print("provide valid id")
-            sys.exit()
-
+    elif cmd == "delete":
+        if argv != 2:
+            print("Please provide correct command")
+            continue
+        
+        if parts[1].isdigit():
+            id = int(parts[1])
+            if id < 0:
+                print("provide valid id")
+                continue
+        else:
+            print("Please provide a valid integer ID.")
+        
         delete(id)
-    elif command == "mark-in-progress":
-        id = int(sys.argv[2])
-        if id < 0:
-            print("provide valid id")
-            sys.exit()
-
+    elif cmd == "mark-in-progress":
+        if argv != 2:
+            print("Please provide correct command")
+            continue
+        
+        if parts[1].isdigit():
+            id = int(parts[1])
+            if id < 0:
+                print("provide valid id")
+                continue
+        else:
+            print("Please provide a valid integer ID.")
+        
         mark_in_progress(id)
-    elif command == "mark-done":
-        id = int(sys.argv[2])
-        if id < 0:
-            print("provide valid id")
-            sys.exit()
-
-        mark_done(id)  
-    elif command == "list":
-        if len(sys.argv) > 2:
-            status = sys.argv[2]
+    elif cmd == "mark-done":
+        if argv != 2:
+            print("Please provide correct command")
+            continue
+        
+        if parts[1].isdigit():
+            id = int(parts[1])
+            if id < 0:
+                print("provide valid id")
+                continue
+        else:
+            print("Please provide a valid integer ID.")
+        
+        mark_done(id)
+    elif cmd == "list":
+        if argv == 2:
+            status = parts[1]
             if status not in ["done", "todo", "in-progress"]:
                 print("provide valid status")
-                sys.exit()
-            else:   
+            else:
                 list_status(status)
+        elif argv > 2:
+            print("Please provide correct command")
         else:
-            list()
+            show_tasks()
+    elif cmd == "quit" or cmd == "exit" or cmd == "break":
+        break
+
             
 
