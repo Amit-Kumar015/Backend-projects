@@ -26,7 +26,7 @@ def add(t):
     task = {
         "id": next_id,
         "description": t,
-        "status": "false",
+        "status": "todo",
         "createdAt": datetime.datetime.now().strftime("%c"),
         "updatedAt": datetime.datetime.now().strftime("%c")
     }
@@ -104,6 +104,21 @@ def mark_done(id):
             json.dump(tasks, f, indent=2)
     else:
         print(f"No task found with id: {id}")
+
+# Listing all tasks
+def list():
+    tasks = load_tasks()
+
+    for task in tasks:
+        print(f"task: {task['description']} | status: {task['status']}")
+
+# Listing tasks by status
+def list_status(status):
+    tasks = load_tasks()
+
+    for task in tasks:
+        if task["status"] == status:
+            print(f"task: {task['description']} | status: {task['status']}")
     
 
 if len(sys.argv) < 2:
@@ -150,6 +165,16 @@ else:
             print("provide valid id")
             sys.exit()
 
-        mark_done(id)    
-
+        mark_done(id)  
+    elif command == "list":
+        if len(sys.argv) > 2:
+            status = sys.argv[2]
+            if status not in ["done", "todo", "in-progress"]:
+                print("provide valid status")
+                sys.exit()
+            else:   
+                list_status(status)
+        else:
+            list()
+            
 
